@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+ai-calling-center-key.json
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build output
+build/
+dist/
+frontend/.next/
+
+# Test coverage
+codecov.yml
+coverage/
+
+# Package manager
+yarn.lock
+package-lock.json
+
+# Local development
+.env.local
+.env.*.local
+
+# Debug
+*.pem
+
+# Misc
+.DS_Store
+*.pem
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
