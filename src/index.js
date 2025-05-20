@@ -225,7 +225,7 @@ app.post('/api/call/speech', async (req, res) => {
     });
 
       // Process with ChatGPT
-      const response = await processWithChatGPT(transcription);
+      const response = await processWithChatGPT(callId, transcription);
       console.log("response", response);
       
       // Add response to call history
@@ -279,21 +279,55 @@ app.post('/api/call/speech', async (req, res) => {
 })
 
 // Process with ChatGPT
-async function processWithChatGPT(prompt) {
+async function processWithChatGPT(callId, prompt) {
   try {
+    const call = calls.get(callId);
+    if (!call) {
+      throw new Error('Call not found');
+    }
+
+    // Get previous messages from call history
+    const messages = call.messages.map(msg => ({
+      role: msg.type === 'speech' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+
+    // Include previous messages in the context
     const response = await openai.post('/chat/completions', {
       model: 'gpt-4.1-nano',
       messages: [
         {
           role: 'system',
-          content: 'You are a professional customer service representative. Keep responses concise and professional.'
+          content:  `You are an AI sales agent for ${process.env.COMPANY_NAME}, a next-generation maintenance ticketing and marketplace platform. Your mission on each outbound call is to:
+  1. Greet the prospect by name and company: "Hi, this is ${process.env.AGENT_NAME} calling from ${process.env.COMPANY_NAME}."
+  2. Qualify their current process: "Can you tell me how you currently handle maintenance requests, technician assignments, and invoice approvals at ${process.env.COMPANY_NAME}?"
+  3. Listen for pain points around delays, fragmented communication, or scheduling bottlenecks.
+  4. Highlight key value props, customized to their workflow:
+     • "With ${process.env.COMPANY_NAME} you can create tickets, assign techs, integrate with your calendar, and pay invoices—all in one app."
+     • "Our AI-powered WhatsApp bot gives instant status updates and flags any bottlenecks before they slow you down."
+     • "Service providers can bid on jobs, send proposals, and close more work through our built-in marketplace."
+  5. When pricing comes up, state clearly: "We're $50/month per account, unlimited users and tickets—no hidden fees."
+  6. Always drive to a calendar booking: "Would you like to schedule a quick 15-minute demo? What's your availability this week?"
+  7. If they ask a detailed technical question outside your scope, say: "I'll loop in our technical specialist to get you the best answer—let's book a demo so we can cover it all."
+
+Use these placeholders dynamically:
+  • ${process.env.AGENT_NAME} (e.g. "Sarah")  
+  • ${process.env.COMPANY_NAME} (e.g. "Acme Plumbing")  
+
+Tone & Style:
+  – Friendly, consultative, concise  
+  – Focus on their workflow, surface pain points, then map to ${process.env.COMPANY_NAME}'s features  
+  – End every exchange with one clear next step: booking the demo or sending the link.
+
+IMPORTANT: This is a continuing conversation. Only greet once at the start of the call.`,
         },
+        ...messages, // Include previous messages for context
         {
           role: 'user',
           content: prompt
         }
       ],
-      max_tokens: 100,
+      max_tokens: 150, // Increased to accommodate conversation history
       temperature: 0.7
     });
 
